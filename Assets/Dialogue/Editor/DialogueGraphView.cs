@@ -56,40 +56,40 @@ public class DialogueGraphView : GraphView
             DialogueText = nodename,
             GUID = Guid.NewGuid().ToString()
         };
-        //var inputPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
-        //inputPort.portName = "Input1";
-        //dialogueNode.titleContainer.Add(inputPort);
+        var inputPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
+        inputPort.portName = "Input";
+        dialogueNode.inputContainer.Add(inputPort);
 
-        var inputPort2 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
-        inputPort2.portName = "Input2";
-        dialogueNode.inputContainer.Add(inputPort2);
+        //var inputPort2 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
+        //inputPort2.portName = "Input2";
+        //dialogueNode.inputContainer.Add(inputPort2);
 
-        var inputPort3 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
-        inputPort3.portName = "Input3";
-        dialogueNode.outputContainer.Add(inputPort3);
+        //var inputPort3 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi);
+        //inputPort3.portName = "Input3";
+        //dialogueNode.outputContainer.Add(inputPort3);
 
-        var inputPort4 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
-        inputPort4.portName = "Input4";
-        
-        //dialogueNode.extensionContainer.Add(inputPort4);
-        VisualElement v = new VisualElement();
-        v.style.backgroundColor = Color.green;
-        v.Add(inputPort4);
+        //var inputPort4 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi, Orientation.Vertical);
+        //inputPort4.portName = "Input4";
 
-        var inputPort5 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
-        inputPort5.portName = "Input5";
-        inputPort5.style.borderBottomWidth = 5f;
-        inputPort5.style.borderBottomColor = Color.black;
-        inputPort5.style.color = Color.black;
-        inputPort5.style.justifyContent = Justify.Center;
-        inputPort5.style.alignItems = Align.Center;
-        //dialogueNode.extensionContainer.Add(inputPort4);
-        VisualElement v2 = new VisualElement();
-        v2.style.backgroundColor = Color.yellow;
-        v2.Add(inputPort5);
+        ////dialogueNode.extensionContainer.Add(inputPort4);
+        //VisualElement v = new VisualElement();
+        //v.style.backgroundColor = Color.green;
+        //v.Add(inputPort4);
 
-        dialogueNode.mainContainer.Add(v);
-        dialogueNode.mainContainer.Insert(0, v2);
+        //var inputPort5 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
+        //inputPort5.portName = "Input5";
+        //inputPort5.style.borderBottomWidth = 5f;
+        //inputPort5.style.borderBottomColor = Color.black;
+        //inputPort5.style.color = Color.black;
+        //inputPort5.style.justifyContent = Justify.Center;
+        //inputPort5.style.alignItems = Align.Center;
+        ////dialogueNode.extensionContainer.Add(inputPort4);
+        //VisualElement v2 = new VisualElement();
+        //v2.style.backgroundColor = Color.yellow;
+        //v2.Add(inputPort5);
+
+        //dialogueNode.mainContainer.Add(v);
+        //dialogueNode.mainContainer.Insert(0, v2);
 
 
 
@@ -102,15 +102,48 @@ public class DialogueGraphView : GraphView
         return dialogueNode;
     }
 
-    private void AddChoicePort(DialogueNode dialogueNode)
+    public void AddChoicePort(DialogueNode dialogueNode, string overiddenPortname = "")
     {
         var generatedPort = GeneratePort(dialogueNode, Direction.Output);
-        var outPutPortCount = dialogueNode.outputContainer.Query("connector").ToList().Count;
-        generatedPort.portName = $"Choice {outPutPortCount}";
 
-        dialogueNode.extensionContainer.Add(generatedPort);
+        var oldLabel = generatedPort.contentContainer.Q<Label>("type");
+        generatedPort.contentContainer.Remove(oldLabel);
+
+        var outPutPortCount = dialogueNode.outputContainer.Query("connector").ToList().Count;
+
+
+        var choicePortname = string.IsNullOrEmpty(overiddenPortname) ? $"Choice {outPutPortCount}" : overiddenPortname;
+
+
+        var textField = new TextField
+        {
+            name = string.Empty,
+            value = choicePortname
+        };
+        textField.style.minWidth = 60;
+        textField.style.maxWidth = 100;
+
+        textField.RegisterValueChangedCallback(evt => generatedPort.portName = evt.newValue);
+        generatedPort.contentContainer.Add(new Label("  "));
+        generatedPort.contentContainer.Add(textField);
+
+        var deleteButton = new Button(() => RemovePort(dialogueNode, generatedPort))
+        {
+            text = "X"
+        };
+
+
+        generatedPort.contentContainer.Add(deleteButton);
+
+        generatedPort.portName = choicePortname;
+        dialogueNode.outputContainer.Add(generatedPort);
         dialogueNode.RefreshExpandedState();
         dialogueNode.RefreshPorts();
+    }
+
+    private void RemovePort(DialogueNode dialogueNode, Port generatedPort)
+    {
+        throw new NotImplementedException();
     }
 
     public void CreateNode(string nodename)
