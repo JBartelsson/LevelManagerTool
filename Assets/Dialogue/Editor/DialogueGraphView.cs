@@ -143,7 +143,6 @@ public class DialogueGraphView : GraphView
 
     private void RemovePort(DialogueNode dialogueNode, Port generatedPort)
     {
-        throw new NotImplementedException();
     }
 
     public void CreateNode(string nodename)
