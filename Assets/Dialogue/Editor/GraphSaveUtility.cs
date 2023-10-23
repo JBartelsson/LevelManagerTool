@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GraphSaveUtility : MonoBehaviour
 {
@@ -75,7 +76,34 @@ public class GraphSaveUtility : MonoBehaviour
 
     private void ConnectNodes()
     {
-        throw new NotImplementedException();
+        for (int i = 0; i < Nodes.Count; i++)
+        {
+            var connections = _containerCache.nodeLinks.Where(x => x.baseNodeguid == Nodes[i].GUID).ToList();
+            Debug.Log(connections.Count);
+            for (int j = 0; j < connections.Count; j++)
+            {
+                var targetNodeGuid = connections[j].targetNodeguid;
+                var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
+                Debug.Log((Port)targetNode.inputContainer[0]);
+                Debug.Log(Nodes[i].outputContainer.childCount);
+
+                Debug.Log(Nodes[i].outputContainer[j].Q<Port>());
+                LinkNodes((Port)targetNode.inputContainer[0], Nodes[i].outputContainer[j].Q<Port>());
+            }
+        }
+    }
+
+    private void LinkNodes(Port input, Port output)
+    {
+        var tempEdge = new Edge()
+        {
+            input = input,
+            output = output
+        };
+        tempEdge.input.Connect(tempEdge);
+        tempEdge.output.Connect(tempEdge);
+        _targetGraphView.Add(tempEdge);
+
     }
 
     private void CreateNodes()
@@ -84,6 +112,7 @@ public class GraphSaveUtility : MonoBehaviour
         {
             var tempNode = _targetGraphView.CreateDialogueNode(nodeData.DialogueText);
             tempNode.GUID = nodeData.guid;
+            tempNode.SetPosition(new Rect(_containerCache.dialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
             _targetGraphView.AddElement(tempNode);
 
             var nodePorts = _containerCache.nodeLinks.Where(x => x.baseNodeguid == nodeData.guid).ToList();
@@ -97,7 +126,7 @@ public class GraphSaveUtility : MonoBehaviour
 
         foreach(var node in Nodes)
         {
-            if (node.EntryPoint) return;
+            if (node.EntryPoint) continue;
             //Remove edges connected to the node
             Edges.Where(x => x.input.node == node).ToList().ForEach(edge => _targetGraphView.RemoveElement(edge));
 

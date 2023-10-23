@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36c812dd4361efc40bced7779321f7d7, type: 3}
+  m_Name: New Narrative
+  m_EditorClassIdentifier: 
+  dialogueNodeData:
+  - guid: 8b66a4c4-dcc3-424c-a0f6-3f5cb43ec3d7
+    DialogueText: Dialogue Node
+    position: {x: 720.8, y: 557.60004}
+  - guid: 4bf9ac31-63ec-45e2-b1cc-b546d53c20cf
+    DialogueText: Dialogue Node
+    position: {x: 316.8, y: 557.60004}
+  - guid: c0057eba-d9cf-4685-b796-6e3904fde652
+    DialogueText: zfjfftfftf
+    position: {x: 251.2, y: 130.4}
+  - guid: baab57dd-9f46-46f1-a8b2-90bedc7a37d4
+    DialogueText: Dialogue Node
+    position: {x: 100, y: 526.4}
+  - guid: 9f05ce03-220a-485f-b260-87b9430e7bbd
+    DialogueText: Dialogue Node
+    position: {x: 576.8, y: 350.40002}
+  - guid: 6c0506f7-0c11-49f9-bf09-b62923e721bf
+    DialogueText: hallo
+    position: {x: 562.4, y: 102.399994}
+  nodeLinks:
+  - baseNodeguid: 9db0e409-dfab-40c6-8f7f-680fd6042e71
+    targetNodeguid: c0057eba-d9cf-4685-b796-6e3904fde652
+    portName: Next
+  - baseNodeguid: c0057eba-d9cf-4685-b796-6e3904fde652
+    targetNodeguid: 6c0506f7-0c11-49f9-bf09-b62923e721bf
+    portName: Choice 0
+  - baseNodeguid: c0057eba-d9cf-4685-b796-6e3904fde652
+    targetNodeguid: 9f05ce03-220a-485f-b260-87b9430e7bbd
+    portName: Choice 1
+  - baseNodeguid: 4bf9ac31-63ec-45e2-b1cc-b546d53c20cf
+    targetNodeguid: 8b66a4c4-dcc3-424c-a0f6-3f5cb43ec3d7
+    portName: Choice 0

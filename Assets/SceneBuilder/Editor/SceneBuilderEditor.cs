@@ -35,6 +35,7 @@ public class SceneBuilderEditor : Editor
                 sceneSetupSO.runtimeScenes[i].path = sceneSetupSO.scenes[i].path;
                 sceneSetupSO.runtimeScenes[i].isActiveScene = sceneSetupSO.scenes[i].isActive;
             }
+            //Editor als Dirty markieren, damit Änderungen gespeichert werden
 
             EditorUtility.SetDirty(sceneSetupSO);
         }

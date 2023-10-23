@@ -4,10 +4,11 @@ using UnityEngine;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using System;
+using System.Linq;
 
 public class DialogueGraphView : GraphView
 {
-    private readonly Vector2 defaultNodesize = new Vector2(150, 100);
+    public readonly Vector2 defaultNodesize = new Vector2(150, 100);
 
     public DialogueGraphView()
     {
@@ -40,7 +41,7 @@ public class DialogueGraphView : GraphView
 
         var generatedPort = GeneratePort(node, Direction.Output);
         generatedPort.portName = "Next";
-        node.inputContainer.Add(generatedPort);
+        node.outputContainer.Add(generatedPort);
 
         node.RefreshExpandedState();
         node.RefreshPorts();
@@ -56,7 +57,7 @@ public class DialogueGraphView : GraphView
             DialogueText = nodename,
             GUID = Guid.NewGuid().ToString()
         };
-        var inputPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
+        var inputPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Horizontal);
         inputPort.portName = "Input";
         dialogueNode.inputContainer.Add(inputPort);
 
@@ -96,9 +97,21 @@ public class DialogueGraphView : GraphView
         var button = new Button(() => { AddChoicePort(dialogueNode); });
         button.text = "New Choice";
         dialogueNode.titleContainer.Add(button);
+
+        var textField = new TextField(string.Empty);
+        textField.RegisterValueChangedCallback(evt => { 
+            dialogueNode.DialogueText = evt.newValue;
+            dialogueNode.title = evt.newValue;
+        });
+        textField.SetValueWithoutNotify(dialogueNode.title);
+        dialogueNode.mainContainer.Add(textField);
+
+        dialogueNode.outputContainer.style.backgroundColor = Color.red;
         dialogueNode.RefreshExpandedState();
         dialogueNode.RefreshPorts();
         dialogueNode.SetPosition(new Rect(Vector2.zero, defaultNodesize));
+
+        dialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
         return dialogueNode;
     }
 
@@ -107,7 +120,8 @@ public class DialogueGraphView : GraphView
         var generatedPort = GeneratePort(dialogueNode, Direction.Output);
 
         var oldLabel = generatedPort.contentContainer.Q<Label>("type");
-        generatedPort.contentContainer.Remove(oldLabel);
+        //generatedPort.contentContainer.Remove(oldLabel);
+        oldLabel.style.display = DisplayStyle.None;
 
         var outPutPortCount = dialogueNode.outputContainer.Query("connector").ToList().Count;
 
@@ -143,6 +157,18 @@ public class DialogueGraphView : GraphView
 
     private void RemovePort(DialogueNode dialogueNode, Port generatedPort)
     {
+        var targetEdge = edges.ToList().Where(x => x.output.portName == generatedPort.portName && x.output.node == generatedPort.node);
+
+        if (targetEdge.Any())
+        {
+            var edge = targetEdge.First();
+            edge.input.Disconnect(edge);
+            RemoveElement(targetEdge.First());
+        }
+
+        dialogueNode.outputContainer.Remove(generatedPort);
+        dialogueNode.RefreshPorts();
+        dialogueNode.RefreshExpandedState();
     }
 
     public void CreateNode(string nodename)

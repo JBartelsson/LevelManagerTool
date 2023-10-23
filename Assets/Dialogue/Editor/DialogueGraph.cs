@@ -21,6 +21,7 @@ public class DialogueGraph : EditorWindow
     private void OnEnable()
     {
         ConstructGraphView();
+        GenerateMinimap();
         GenerateToolbar();
     }
 
@@ -74,6 +75,13 @@ public class DialogueGraph : EditorWindow
         {
             saveUtility.LoadGraph(_filename);
         }
+    }
+
+    private void GenerateMinimap()
+    {
+        var minimap = new MiniMap { anchored = true };
+        minimap.SetPosition(new Rect(10, 30, 200, 140));
+        _graphView.Add(minimap);
     }
 
 }
