@@ -23,12 +23,27 @@ public class DialogueGraph : EditorWindow
         ConstructGraphView();
         GenerateMinimap();
         GenerateToolbar();
+        GenerateClickEvents();
+    }
+
+    private void GenerateClickEvents()
+    {
+        rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
+        {
+        if (evt.keyCode == KeyCode.Space)
+                {
+                _graphView.CreateNode("New Node", Event.current.mousePosition);
+        }
+    });
     }
 
     private void OnDisable()
     {
         rootVisualElement.Remove(_graphView);
     }
+
+
+
 
     private void ConstructGraphView()
     {
@@ -52,7 +67,7 @@ public class DialogueGraph : EditorWindow
 
         var nodeCreateButton = new Button(() =>
         {
-            _graphView.CreateNode("Dialogue Node");
+            _graphView.CreateNode("Dialogue Node", new Vector2(position.width /2, position.height / 2));
         });
         nodeCreateButton.text = "Create Node";
         toolbar.Add(nodeCreateButton);

@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/LoginUI/login.uss?fileID=7433441132597879392&amp;guid=6788eae1d9511924d8e2daa1f9a3633b&amp;type=3#login" />
+    <ui:Label tabindex="-1" text="Please Sign in you fool" parse-escape-sequences="true" display-tooltip-when-elided="true" class="header" />
+    <ui:TextField picking-mode="Ignore" label="Username" value="username" name="username" />
+    <ui:TextField picking-mode="Ignore" label="Password" value="filler text" password="true" name="password" />
+    <ui:Label tabindex="-1" text="Errör" parse-escape-sequences="true" display-tooltip-when-elided="true" name="errorlabel" style="font-size: 58px; color: rgb(255, 255, 255); display: flex; -unity-background-scale-mode: stretch-to-fill; height: auto; width: auto; visibility: visible;" />
+    <ui:Button text="Login" parse-escape-sequences="true" display-tooltip-when-elided="true" name="loginbutton" style="background-color: rgb(0, 238, 42);" />
+</ui:UXML>

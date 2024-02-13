@@ -9,6 +9,7 @@ using System.Linq;
 public class DialogueGraphView : GraphView
 {
     public readonly Vector2 defaultNodesize = new Vector2(150, 100);
+    private readonly Vector2 defaultPosition = new Vector2(0f, 0f);
 
     public DialogueGraphView()
     {
@@ -48,9 +49,11 @@ public class DialogueGraphView : GraphView
         node.SetPosition(new Rect(100, 200, 100, 150));
         return node;
     }
-
-    public DialogueNode CreateDialogueNode(string nodename)
+    //Creates the DialogueNode Visual
+    public DialogueNode CreateDialogueNode(string nodename, Vector2? position = null)
     {
+        if (!position.HasValue) position = Vector2.zero;
+
         var dialogueNode = new DialogueNode
         {
             title = nodename,
@@ -109,7 +112,7 @@ public class DialogueGraphView : GraphView
         dialogueNode.outputContainer.style.backgroundColor = Color.red;
         dialogueNode.RefreshExpandedState();
         dialogueNode.RefreshPorts();
-        dialogueNode.SetPosition(new Rect(Vector2.zero, defaultNodesize));
+        dialogueNode.SetPosition(new Rect(position.Value, defaultNodesize));
 
         dialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
         return dialogueNode;
@@ -171,9 +174,16 @@ public class DialogueGraphView : GraphView
         dialogueNode.RefreshExpandedState();
     }
 
-    public void CreateNode(string nodename)
+    public void CreateNode(string nodename, Vector3? position = null)
     {
-        AddElement(CreateDialogueNode(nodename));
+        if (position.HasValue)
+        {
+            AddElement(CreateDialogueNode(nodename, position.Value));
+        } else
+        {
+            AddElement(CreateDialogueNode(nodename, Vector2.zero));
+
+        }
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
