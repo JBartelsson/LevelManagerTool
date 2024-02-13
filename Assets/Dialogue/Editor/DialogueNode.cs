@@ -5,7 +5,6 @@ using UnityEditor.Experimental.GraphView;
 
 public class DialogueNode : Node
 {
-    // Start is called before the first frame update
     public string GUID;
 
     public string DialogueText;
