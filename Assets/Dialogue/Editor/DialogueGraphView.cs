@@ -5,13 +5,15 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using System;
 using System.Linq;
+using UnityEditor;
 
 public class DialogueGraphView : GraphView
 {
     public readonly Vector2 defaultNodesize = new Vector2(150, 100);
     private readonly Vector2 defaultPosition = new Vector2(0f, 0f);
+    private NodeSearchWindow nodeSearchWindow;
 
-    public DialogueGraphView()
+    public DialogueGraphView(EditorWindow editorWindow)
     {
         styleSheets.Add(Resources.Load<StyleSheet>("DialogueGraph"));
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
@@ -23,6 +25,14 @@ public class DialogueGraphView : GraphView
         Insert(0, grid);
         grid.StretchToParentSize();
         AddElement(GenerateEntryPointNode());
+        AddSearchWindow(editorWindow);
+    }
+
+    private void AddSearchWindow(EditorWindow editorWindow)
+    {
+        nodeSearchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
+        nodeSearchWindow.Init(editorWindow, this);
+        nodeCreationRequest = context => SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), nodeSearchWindow);
     }
 
     private Port GeneratePort(DialogueNode node, Direction portDirection, Port.Capacity capacity = Port.Capacity.Single, Orientation orientation = Orientation.Horizontal)
@@ -174,16 +184,9 @@ public class DialogueGraphView : GraphView
         dialogueNode.RefreshExpandedState();
     }
 
-    public void CreateNode(string nodename, Vector3? position = null)
+    public void CreateNode(string nodename, Vector2 position)
     {
-        if (position.HasValue)
-        {
-            AddElement(CreateDialogueNode(nodename, position.Value));
-        } else
-        {
-            AddElement(CreateDialogueNode(nodename, Vector2.zero));
-
-        }
+        AddElement(CreateDialogueNode(nodename, position));
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

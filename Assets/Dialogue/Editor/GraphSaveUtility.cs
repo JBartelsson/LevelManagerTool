@@ -110,7 +110,7 @@ public class GraphSaveUtility : MonoBehaviour
     {
         foreach (var nodeData in _containerCache.dialogueNodeData)
         {
-            var tempNode = _targetGraphView.CreateDialogueNode(nodeData.DialogueText);
+            var tempNode = _targetGraphView.CreateDialogueNode(nodeData.DialogueText, Vector2.zero);
             tempNode.GUID = nodeData.guid;
             tempNode.SetPosition(new Rect(_containerCache.dialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
             _targetGraphView.AddElement(tempNode);
