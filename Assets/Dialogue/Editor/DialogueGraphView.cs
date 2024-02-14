@@ -11,7 +11,11 @@ public class DialogueGraphView : GraphView
 {
     public readonly Vector2 defaultNodesize = new Vector2(150, 100);
     private readonly Vector2 defaultPosition = new Vector2(0f, 0f);
+    public Blackboard blackboard;
     private NodeSearchWindow nodeSearchWindow;
+    private List<ExposedProperty> exposedProperties = new();
+
+    public List<ExposedProperty> ExposedProperties { get => exposedProperties; set => exposedProperties = value; }
 
     public DialogueGraphView(EditorWindow editorWindow)
     {
@@ -74,36 +78,36 @@ public class DialogueGraphView : GraphView
         inputPort.portName = "Input";
         dialogueNode.inputContainer.Add(inputPort);
 
-        //var inputPort2 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
-        //inputPort2.portName = "Input2";
-        //dialogueNode.inputContainer.Add(inputPort2);
+        var inputPort2 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
+        inputPort2.portName = "Input2";
+        dialogueNode.inputContainer.Add(inputPort2);
 
-        //var inputPort3 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi);
-        //inputPort3.portName = "Input3";
-        //dialogueNode.outputContainer.Add(inputPort3);
+        var inputPort3 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi);
+        inputPort3.portName = "Input3";
+        dialogueNode.outputContainer.Add(inputPort3);
 
-        //var inputPort4 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi, Orientation.Vertical);
-        //inputPort4.portName = "Input4";
+        var inputPort4 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi, Orientation.Vertical);
+        inputPort4.portName = "Input4";
 
-        ////dialogueNode.extensionContainer.Add(inputPort4);
-        //VisualElement v = new VisualElement();
-        //v.style.backgroundColor = Color.green;
-        //v.Add(inputPort4);
+        dialogueNode.extensionContainer.Add(inputPort4);
+        VisualElement topContainer = new VisualElement();
+        topContainer.style.backgroundColor = Color.green;
+        topContainer.Add(inputPort4);
 
-        //var inputPort5 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
-        //inputPort5.portName = "Input5";
-        //inputPort5.style.borderBottomWidth = 5f;
-        //inputPort5.style.borderBottomColor = Color.black;
-        //inputPort5.style.color = Color.black;
-        //inputPort5.style.justifyContent = Justify.Center;
-        //inputPort5.style.alignItems = Align.Center;
-        ////dialogueNode.extensionContainer.Add(inputPort4);
-        //VisualElement v2 = new VisualElement();
-        //v2.style.backgroundColor = Color.yellow;
-        //v2.Add(inputPort5);
+        var inputPort5 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
+        inputPort5.portName = "Input5";
+        inputPort5.style.borderBottomWidth = 5f;
+        inputPort5.style.borderBottomColor = Color.black;
+        inputPort5.style.color = Color.black;
+        inputPort5.style.justifyContent = Justify.Center;
+        inputPort5.style.alignItems = Align.Center;
+        //dialogueNode.extensionContainer.Add(inputPort4);
+        VisualElement bottomContainer = new VisualElement();
+        bottomContainer.style.backgroundColor = Color.yellow;
+        bottomContainer.Add(inputPort5);
 
-        //dialogueNode.mainContainer.Add(v);
-        //dialogueNode.mainContainer.Insert(0, v2);
+        dialogueNode.mainContainer.Add(topContainer);
+        dialogueNode.mainContainer.Insert(0, bottomContainer);
 
 
 
@@ -112,7 +116,8 @@ public class DialogueGraphView : GraphView
         dialogueNode.titleContainer.Add(button);
 
         var textField = new TextField(string.Empty);
-        textField.RegisterValueChangedCallback(evt => { 
+        textField.RegisterValueChangedCallback(evt =>
+        {
             dialogueNode.DialogueText = evt.newValue;
             dialogueNode.title = evt.newValue;
         });
@@ -200,5 +205,42 @@ public class DialogueGraphView : GraphView
             }
         });
         return compatiblePorts;
+    }
+
+    public void ClearBlackBoardAndExposedProperties()
+    {
+        ExposedProperties.Clear();
+        blackboard.Clear();
+    }
+    public void AddProptertyToBlackboard(ExposedProperty exposedProperty)
+    {
+        var localPropertyName = exposedProperty.PropertyName;
+        var localPropertyValue = exposedProperty.PropertyValue;
+        while(exposedProperties.Any(x => x.PropertyName == localPropertyName))
+        {
+            localPropertyName = $"{localPropertyName}(1)";
+        }
+
+        var property = new ExposedProperty();
+        property.PropertyName = localPropertyName;
+        property.PropertyValue = exposedProperty.PropertyValue;
+        Debug.Log(property);
+        exposedProperties.Add(property);
+
+        var container = new VisualElement();
+        var blackboardField = new BlackboardField { text = property.PropertyName, typeText = "string Property" };
+        container.Add(blackboardField);
+        var propertyValueTextField = new TextField("Value:")
+        {
+            value = localPropertyValue
+        };
+        propertyValueTextField.RegisterValueChangedCallback(evt =>
+        {
+            var changingPropertyIndex = exposedProperties.FindIndex(x => x.PropertyName == property.PropertyName);
+            exposedProperties[changingPropertyIndex].PropertyValue = evt.newValue;
+        });
+        var blackBoardValueRow = new BlackboardRow(blackboardField, propertyValueTextField);
+        container.Add(blackBoardValueRow);
+        blackboard.Add(container);
     }
 }

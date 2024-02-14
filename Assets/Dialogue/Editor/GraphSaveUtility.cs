@@ -25,16 +25,30 @@ public class GraphSaveUtility : MonoBehaviour
 
     public void SaveGraph(string fileName)
     {
-        if (!Edges.Any()) return; //If there is no connection, return
-
         var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+        if(!SaveNodes(dialogueContainer)) return;
+        SaveExposedProperties(dialogueContainer);
+
+        AssetDatabase.CreateAsset(dialogueContainer, $"{fileName}");
+        AssetDatabase.SaveAssets();
+    }
+
+    private void SaveExposedProperties(DialogueContainer dialogueContainer)
+    {
+        dialogueContainer.ExposedProperties.AddRange(_targetGraphView.ExposedProperties);
+    }
+
+    private bool SaveNodes(DialogueContainer dialogueContainer)
+    {
+        if (!Edges.Any()) return false; //If there is no connection, return
+
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
         for (int i = 0; i < connectedPorts.Length; i++)
         {
             var outputNode = connectedPorts[i].output.node as DialogueNode;
             var inputNode = connectedPorts[i].input.node as DialogueNode;
 
-            dialogueContainer.nodeLinks.Add(new NodeLinkData()
+            dialogueContainer.NodeLinks.Add(new NodeLinkData()
             {
                 baseNodeguid = outputNode.GUID,
                 portName = connectedPorts[i].output.portName,
@@ -43,26 +57,21 @@ public class GraphSaveUtility : MonoBehaviour
         }
         foreach (var dialogueNode in Nodes.Where(node => !node.EntryPoint))
         {
-            dialogueContainer.dialogueNodeData.Add(new DialogueNodeData
+            dialogueContainer.DialogueNodeData.Add(new DialogueNodeData
             {
                 guid = dialogueNode.GUID,
                 DialogueText = dialogueNode.DialogueText,
                 position = dialogueNode.GetPosition().position
             });
         }
+        return true;
 
-        //Auto creates resource folder if exists
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-        {
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        }
-
-        AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
-        AssetDatabase.SaveAssets();
+        
     }
     public void LoadGraph(string fileName)
     {
-        _containerCache = Resources.Load<DialogueContainer>(fileName);
+        Debug.Log(fileName);
+        _containerCache = AssetDatabase.LoadAssetAtPath<DialogueContainer>(fileName);
         if(_containerCache == null)
         {
             EditorUtility.DisplayDialog("File not Found", "Target dialogue graph file does not exist!", "OK");
@@ -72,13 +81,23 @@ public class GraphSaveUtility : MonoBehaviour
         ClearGraph();
         CreateNodes();
         ConnectNodes();
+        CreateExposedProperties();
+    }
+
+    private void CreateExposedProperties()
+    {
+        _targetGraphView.ClearBlackBoardAndExposedProperties();
+        foreach(var exposedProperty in _containerCache.ExposedProperties)
+        {
+            _targetGraphView.AddProptertyToBlackboard(exposedProperty);
+        }
     }
 
     private void ConnectNodes()
     {
         for (int i = 0; i < Nodes.Count; i++)
         {
-            var connections = _containerCache.nodeLinks.Where(x => x.baseNodeguid == Nodes[i].GUID).ToList();
+            var connections = _containerCache.NodeLinks.Where(x => x.baseNodeguid == Nodes[i].GUID).ToList();
             Debug.Log(connections.Count);
             for (int j = 0; j < connections.Count; j++)
             {
@@ -108,21 +127,22 @@ public class GraphSaveUtility : MonoBehaviour
 
     private void CreateNodes()
     {
-        foreach (var nodeData in _containerCache.dialogueNodeData)
+        foreach (var nodeData in _containerCache.DialogueNodeData)
         {
             var tempNode = _targetGraphView.CreateDialogueNode(nodeData.DialogueText, Vector2.zero);
             tempNode.GUID = nodeData.guid;
-            tempNode.SetPosition(new Rect(_containerCache.dialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
+            tempNode.SetPosition(new Rect(_containerCache.DialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
             _targetGraphView.AddElement(tempNode);
 
-            var nodePorts = _containerCache.nodeLinks.Where(x => x.baseNodeguid == nodeData.guid).ToList();
+            var nodePorts = _containerCache.NodeLinks.Where(x => x.baseNodeguid == nodeData.guid).ToList();
             nodePorts.ForEach(x => _targetGraphView.AddChoicePort(tempNode, x.portName));
         }
     }
 
     private void ClearGraph()
     {
-        Nodes.Find(x => x.EntryPoint).GUID = _containerCache.nodeLinks[0].baseNodeguid;
+        if (_containerCache.NodeLinks.Count == 0) return;
+        Nodes.Find(x => x.EntryPoint).GUID = _containerCache.NodeLinks[0].baseNodeguid;
 
         foreach(var node in Nodes)
         {

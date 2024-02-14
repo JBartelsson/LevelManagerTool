@@ -33,7 +33,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
             },
             new SearchTreeEntry(new GUIContent("Trigger", _indentationIcon))
             {
-                userData = new DialogueNode(), level = 2
+                userData = null, level = 2
             }
 
         };
