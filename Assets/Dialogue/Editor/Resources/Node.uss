@@ -1,3 +1,10 @@
 DialogueNode #title {
 	background-color: rgb(0,128,0);
 }
+#title-label {
+	display: none
+}
+
+#title-button-container {
+	display: none
+}

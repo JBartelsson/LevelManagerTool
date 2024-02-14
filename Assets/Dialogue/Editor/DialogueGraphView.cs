@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using System;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build.Content;
 
 public class DialogueGraphView : GraphView
 {
@@ -16,6 +17,10 @@ public class DialogueGraphView : GraphView
     private List<ExposedProperty> exposedProperties = new();
 
     public List<ExposedProperty> ExposedProperties { get => exposedProperties; set => exposedProperties = value; }
+
+    
+
+    private List<string> scenes = new List<string>();
 
     public DialogueGraphView(EditorWindow editorWindow)
     {
@@ -28,8 +33,19 @@ public class DialogueGraphView : GraphView
         var grid = new GridBackground();
         Insert(0, grid);
         grid.StretchToParentSize();
-        AddElement(GenerateEntryPointNode());
+        //AddElement(GenerateEntryPointNode());
         AddSearchWindow(editorWindow);
+
+        scenes = new List<string>();
+        foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+        {
+            if (scene.enabled)
+            {
+                scenes.Add(scene.path);
+                Debug.Log(scene.path);
+            }
+        }
+
     }
 
     private void AddSearchWindow(EditorWindow editorWindow)
@@ -50,7 +66,6 @@ public class DialogueGraphView : GraphView
         {
             title = "START",
             GUID = Guid.NewGuid().ToString(),
-            DialogueText = "ENTRYPOINT",
             EntryPoint = true
         };
 
@@ -64,65 +79,81 @@ public class DialogueGraphView : GraphView
         return node;
     }
     //Creates the DialogueNode Visual
-    public DialogueNode CreateDialogueNode(string nodename, Vector2? position = null)
+    public DialogueNode CreateDialogueNode(string scenePath, Vector2? position = null)
     {
+        if (scenes.Count == 0)
+        {
+            EditorUtility.DisplayDialog("Error", "No Scenes in Build Settings. Please add Scenes in order to use this tool.", "Ok");
+            return null;
+        }
         if (!position.HasValue) position = Vector2.zero;
+        if (scenePath == "")
+        {
+            scenePath = scenes[0];
+        } 
 
         var dialogueNode = new DialogueNode
         {
-            title = nodename,
-            DialogueText = nodename,
+            title = scenePath,
+            sceneName = scenePath,
             GUID = Guid.NewGuid().ToString()
         };
-        var inputPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Horizontal);
-        inputPort.portName = "Input";
-        dialogueNode.inputContainer.Add(inputPort);
+        var leftPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Single, Orientation.Horizontal);
+        leftPort.portName = SceneTransitions.LEFT_PORT_NAME;
+        leftPort.name = SceneTransitions.LEFT_PORT_NAME;
 
-        var inputPort2 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi);
-        inputPort2.portName = "Input2";
-        dialogueNode.inputContainer.Add(inputPort2);
+        dialogueNode.inputContainer.Add(leftPort);
 
-        var inputPort3 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi);
-        inputPort3.portName = "Input3";
-        dialogueNode.outputContainer.Add(inputPort3);
+        var rightPort = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Single);
+        rightPort.portName = SceneTransitions.RIGHT_PORT_NAME;
+        rightPort.name = SceneTransitions.RIGHT_PORT_NAME;
+        dialogueNode.outputContainer.Add(rightPort);
 
-        var inputPort4 = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Multi, Orientation.Vertical);
-        inputPort4.portName = "Input4";
+        var bottomPort = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Single, Orientation.Vertical);
+        bottomPort.portName = SceneTransitions.BOTTOM_PORT_NAME;
+        bottomPort.name = SceneTransitions.BOTTOM_PORT_NAME;
 
-        dialogueNode.extensionContainer.Add(inputPort4);
+
+        dialogueNode.extensionContainer.Add(bottomPort);
         VisualElement topContainer = new VisualElement();
         topContainer.style.backgroundColor = Color.green;
-        topContainer.Add(inputPort4);
+        topContainer.Add(bottomPort);
 
-        var inputPort5 = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Multi, Orientation.Vertical);
-        inputPort5.portName = "Input5";
-        inputPort5.style.borderBottomWidth = 5f;
-        inputPort5.style.borderBottomColor = Color.black;
-        inputPort5.style.color = Color.black;
-        inputPort5.style.justifyContent = Justify.Center;
-        inputPort5.style.alignItems = Align.Center;
+        var topPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Single, Orientation.Vertical);
+        topPort.portName = SceneTransitions.TOP_PORT_NAME;
+        topPort.name = SceneTransitions.TOP_PORT_NAME;
+
+        topPort.style.borderBottomWidth = 5f;
+        topPort.style.borderBottomColor = Color.black;
+        topPort.style.color = Color.black;
+        topPort.style.justifyContent = Justify.Center;
+        bottomPort.style.justifyContent = Justify.Center;
+
+        topPort.style.alignItems = Align.Center;
+        bottomPort.style.alignItems = Align.Center;
         //dialogueNode.extensionContainer.Add(inputPort4);
         VisualElement bottomContainer = new VisualElement();
         bottomContainer.style.backgroundColor = Color.yellow;
-        bottomContainer.Add(inputPort5);
+        bottomContainer.Add(topPort);
+
+        DropdownField dropDown = new DropdownField();
+        dropDown.choices = scenes;
+        dropDown.RegisterValueChangedCallback((evt) =>
+        {
+            dialogueNode.sceneName = evt.newValue;
+        });
+        if (scenes.Contains(scenePath))
+        {
+            dropDown.index = scenes.IndexOf(scenePath);
+        } else
+        {
+            dropDown.index = 0;
+        }
+        
 
         dialogueNode.mainContainer.Add(topContainer);
         dialogueNode.mainContainer.Insert(0, bottomContainer);
-
-
-
-        var button = new Button(() => { AddChoicePort(dialogueNode); });
-        button.text = "New Choice";
-        dialogueNode.titleContainer.Add(button);
-
-        var textField = new TextField(string.Empty);
-        textField.RegisterValueChangedCallback(evt =>
-        {
-            dialogueNode.DialogueText = evt.newValue;
-            dialogueNode.title = evt.newValue;
-        });
-        textField.SetValueWithoutNotify(dialogueNode.title);
-        dialogueNode.mainContainer.Add(textField);
+        dialogueNode.titleContainer.Add(dropDown);
 
         dialogueNode.outputContainer.style.backgroundColor = Color.red;
         dialogueNode.RefreshExpandedState();

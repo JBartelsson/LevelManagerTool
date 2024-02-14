@@ -7,6 +7,6 @@ public class DialogueNode : Node
 {
     public string GUID;
 
-    public string DialogueText;
+    public string sceneName;
     public bool EntryPoint = false;
 }

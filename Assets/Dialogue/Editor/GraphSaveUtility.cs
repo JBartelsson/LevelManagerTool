@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 public class GraphSaveUtility : MonoBehaviour
 {
     private DialogueGraphView _targetGraphView;
-    private DialogueContainer _containerCache;
+    private SceneTransitions _containerCache;
 
     private List<Edge> Edges => _targetGraphView.edges.ToList();
     private List<DialogueNode> Nodes => _targetGraphView.nodes.ToList().Cast<DialogueNode>().ToList();
@@ -25,20 +25,21 @@ public class GraphSaveUtility : MonoBehaviour
 
     public void SaveGraph(string fileName)
     {
-        var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+        var dialogueContainer = ScriptableObject.CreateInstance<SceneTransitions>();
         if(!SaveNodes(dialogueContainer)) return;
         SaveExposedProperties(dialogueContainer);
 
-        AssetDatabase.CreateAsset(dialogueContainer, $"{fileName}");
+        SceneTransitions sceneTransition = AssetDatabase.LoadAssetAtPath<SceneTransitions>(fileName);
+        sceneTransition.Renew(dialogueContainer.DialogueNodeData, dialogueContainer.NodeLinks, dialogueContainer.ExposedProperties);
         AssetDatabase.SaveAssets();
     }
 
-    private void SaveExposedProperties(DialogueContainer dialogueContainer)
+    private void SaveExposedProperties(SceneTransitions dialogueContainer)
     {
         dialogueContainer.ExposedProperties.AddRange(_targetGraphView.ExposedProperties);
     }
 
-    private bool SaveNodes(DialogueContainer dialogueContainer)
+    private bool SaveNodes(SceneTransitions dialogueContainer)
     {
         if (!Edges.Any()) return false; //If there is no connection, return
 
@@ -51,7 +52,8 @@ public class GraphSaveUtility : MonoBehaviour
             dialogueContainer.NodeLinks.Add(new NodeLinkData()
             {
                 baseNodeguid = outputNode.GUID,
-                portName = connectedPorts[i].output.portName,
+                basePortName = connectedPorts[i].output.portName,
+                targetPortName = connectedPorts[i].input.portName,
                 targetNodeguid = inputNode.GUID
             });
         }
@@ -60,7 +62,7 @@ public class GraphSaveUtility : MonoBehaviour
             dialogueContainer.DialogueNodeData.Add(new DialogueNodeData
             {
                 guid = dialogueNode.GUID,
-                DialogueText = dialogueNode.DialogueText,
+                scenePath = dialogueNode.sceneName,
                 position = dialogueNode.GetPosition().position
             });
         }
@@ -71,7 +73,7 @@ public class GraphSaveUtility : MonoBehaviour
     public void LoadGraph(string fileName)
     {
         Debug.Log(fileName);
-        _containerCache = AssetDatabase.LoadAssetAtPath<DialogueContainer>(fileName);
+        _containerCache = AssetDatabase.LoadAssetAtPath<SceneTransitions>(fileName);
         if(_containerCache == null)
         {
             EditorUtility.DisplayDialog("File not Found", "Target dialogue graph file does not exist!", "OK");
@@ -98,16 +100,16 @@ public class GraphSaveUtility : MonoBehaviour
         for (int i = 0; i < Nodes.Count; i++)
         {
             var connections = _containerCache.NodeLinks.Where(x => x.baseNodeguid == Nodes[i].GUID).ToList();
-            Debug.Log(connections.Count);
             for (int j = 0; j < connections.Count; j++)
             {
                 var targetNodeGuid = connections[j].targetNodeguid;
                 var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
-                Debug.Log((Port)targetNode.inputContainer[0]);
-                Debug.Log(Nodes[i].outputContainer.childCount);
+                Port basePort = Nodes[i].Q<Port>(connections[j].basePortName);
+                Debug.Log($"{connections[j].basePortName} finds {basePort}");
 
-                Debug.Log(Nodes[i].outputContainer[j].Q<Port>());
-                LinkNodes((Port)targetNode.inputContainer[0], Nodes[i].outputContainer[j].Q<Port>());
+                Port targetPort = targetNode.Q<Port>(connections[j].targetPortName);
+                Debug.Log($"{connections[j].targetPortName} finds {targetPort}");
+                LinkNodes(targetPort, basePort);
             }
         }
     }
@@ -129,20 +131,18 @@ public class GraphSaveUtility : MonoBehaviour
     {
         foreach (var nodeData in _containerCache.DialogueNodeData)
         {
-            var tempNode = _targetGraphView.CreateDialogueNode(nodeData.DialogueText, Vector2.zero);
+            var tempNode = _targetGraphView.CreateDialogueNode(nodeData.scenePath, Vector2.zero);
             tempNode.GUID = nodeData.guid;
             tempNode.SetPosition(new Rect(_containerCache.DialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
             _targetGraphView.AddElement(tempNode);
 
-            var nodePorts = _containerCache.NodeLinks.Where(x => x.baseNodeguid == nodeData.guid).ToList();
-            nodePorts.ForEach(x => _targetGraphView.AddChoicePort(tempNode, x.portName));
         }
     }
 
     private void ClearGraph()
     {
         if (_containerCache.NodeLinks.Count == 0) return;
-        Nodes.Find(x => x.EntryPoint).GUID = _containerCache.NodeLinks[0].baseNodeguid;
+        //Nodes.Find(x => x.EntryPoint).GUID = _containerCache.NodeLinks[0].baseNodeguid;
 
         foreach(var node in Nodes)
         {
