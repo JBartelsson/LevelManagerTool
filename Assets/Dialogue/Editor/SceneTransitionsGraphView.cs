@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Content;
 
-public class DialogueGraphView : GraphView
+public class SceneTransitionsGraphView : GraphView
 {
     public readonly Vector2 defaultNodesize = new Vector2(150, 100);
     private readonly Vector2 defaultPosition = new Vector2(0f, 0f);
@@ -22,7 +22,7 @@ public class DialogueGraphView : GraphView
 
     private List<string> scenes = new List<string>();
 
-    public DialogueGraphView(EditorWindow editorWindow)
+    public SceneTransitionsGraphView(EditorWindow editorWindow)
     {
         styleSheets.Add(Resources.Load<StyleSheet>("DialogueGraph"));
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
@@ -55,14 +55,14 @@ public class DialogueGraphView : GraphView
         nodeCreationRequest = context => SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), nodeSearchWindow);
     }
 
-    private Port GeneratePort(DialogueNode node, Direction portDirection, Port.Capacity capacity = Port.Capacity.Single, Orientation orientation = Orientation.Horizontal)
+    private Port GeneratePort(Node node, Direction portDirection, Port.Capacity capacity = Port.Capacity.Single, Orientation orientation = Orientation.Horizontal)
     {
         return node.InstantiatePort(orientation, portDirection, capacity, typeof(float));
     }
 
-    private DialogueNode GenerateEntryPointNode()
+    private SceneTransitionNode GenerateEntryPointNode()
     {
-        var node = new DialogueNode
+        var node = new SceneTransitionNode
         {
             title = "START",
             GUID = Guid.NewGuid().ToString(),
@@ -79,11 +79,16 @@ public class DialogueGraphView : GraphView
         return node;
     }
     //Creates the DialogueNode Visual
-    public DialogueNode CreateDialogueNode(string scenePath, Vector2? position = null)
+    public SceneTransitionNode CreateTransitionNodeGraphic(string scenePath, Vector2? position = null)
     {
         if (scenes.Count == 0)
         {
             EditorUtility.DisplayDialog("Error", "No Scenes in Build Settings. Please add Scenes in order to use this tool.", "Ok");
+            return null;
+        }
+        if (nodes.Count() == scenes.Count)
+        {
+            EditorUtility.DisplayDialog("Error", "No scenes left. Add more scenes to create another node.", "Ok");
             return null;
         }
         if (!position.HasValue) position = Vector2.zero;
@@ -92,7 +97,7 @@ public class DialogueGraphView : GraphView
             scenePath = scenes[0];
         } 
 
-        var dialogueNode = new DialogueNode
+        var dialogueNode = new SceneTransitionNode
         {
             title = scenePath,
             sceneName = scenePath,
@@ -164,47 +169,28 @@ public class DialogueGraphView : GraphView
         return dialogueNode;
     }
 
-    public void AddChoicePort(DialogueNode dialogueNode, string overiddenPortname = "")
+    private SceneConditionNode CreateConditionNodeGraphic()
     {
-        var generatedPort = GeneratePort(dialogueNode, Direction.Output);
-
-        var oldLabel = generatedPort.contentContainer.Q<Label>("type");
-        //generatedPort.contentContainer.Remove(oldLabel);
-        oldLabel.style.display = DisplayStyle.None;
-
-        var outPutPortCount = dialogueNode.outputContainer.Query("connector").ToList().Count;
-
-
-        var choicePortname = string.IsNullOrEmpty(overiddenPortname) ? $"Choice {outPutPortCount}" : overiddenPortname;
-
-
-        var textField = new TextField
+        SceneConditionNode sceneConditionNode = new SceneConditionNode
         {
-            name = string.Empty,
-            value = choicePortname
-        };
-        textField.style.minWidth = 60;
-        textField.style.maxWidth = 100;
-
-        textField.RegisterValueChangedCallback(evt => generatedPort.portName = evt.newValue);
-        generatedPort.contentContainer.Add(new Label("  "));
-        generatedPort.contentContainer.Add(textField);
-
-        var deleteButton = new Button(() => RemovePort(dialogueNode, generatedPort))
-        {
-            text = "X"
+            GUID = Guid.NewGuid().ToString()
         };
 
+        var leftPort = GeneratePort(sceneConditionNode, Direction.Input, Port.Capacity.Single, Orientation.Horizontal);
+        leftPort.portName = SceneTransitions.LEFT_PORT_NAME;
+        leftPort.name = SceneTransitions.LEFT_PORT_NAME;
 
-        generatedPort.contentContainer.Add(deleteButton);
+        sceneConditionNode.inputContainer.Add(leftPort);
 
-        generatedPort.portName = choicePortname;
-        dialogueNode.outputContainer.Add(generatedPort);
-        dialogueNode.RefreshExpandedState();
-        dialogueNode.RefreshPorts();
+        var rightPort = GeneratePort(sceneConditionNode, Direction.Output, Port.Capacity.Single);
+        rightPort.portName = SceneTransitions.RIGHT_PORT_NAME;
+        rightPort.name = SceneTransitions.RIGHT_PORT_NAME;
+        sceneConditionNode.outputContainer.Add(rightPort);
+        return sceneConditionNode;
     }
 
-    private void RemovePort(DialogueNode dialogueNode, Port generatedPort)
+
+    private void RemovePort(SceneTransitionNode dialogueNode, Port generatedPort)
     {
         var targetEdge = edges.ToList().Where(x => x.output.portName == generatedPort.portName && x.output.node == generatedPort.node);
 
@@ -220,9 +206,14 @@ public class DialogueGraphView : GraphView
         dialogueNode.RefreshExpandedState();
     }
 
-    public void CreateNode(string nodename, Vector2 position)
+    public void CreateTransitionNode(string nodename, Vector2 position)
     {
-        AddElement(CreateDialogueNode(nodename, position));
+        AddElement(CreateTransitionNodeGraphic(nodename, position));
+    }
+
+    public void CreateConditionNode()
+    {
+        AddElement(CreateConditionNodeGraphic());
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

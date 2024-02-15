@@ -14,21 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dialogueNodeData:
   - guid: b2e9058e-1ea2-4f9b-b35e-98af21d32b9f
-    DialogueText: Dialogue Node
+    scenePath: 
     position: {x: 248.8, y: 318.40002}
   - guid: 40139ca8-1b28-4b1a-8988-474bda566c64
-    DialogueText: Dialogue Node
+    scenePath: 
     position: {x: 248.8, y: 120}
   - guid: b9e1205a-fccd-434c-bf2c-d1d0d71cee3a
-    DialogueText: Dialogue Node
+    scenePath: 
     position: {x: 603.2, y: 134.4}
   nodeLinks:
   - baseNodeguid: 40139ca8-1b28-4b1a-8988-474bda566c64
     targetNodeguid: b2e9058e-1ea2-4f9b-b35e-98af21d32b9f
-    portName: Input4
-  - baseNodeguid: 13b46dda-e6a9-4f00-8bcf-83235e058929
-    targetNodeguid: 40139ca8-1b28-4b1a-8988-474bda566c64
-    portName: Next
+    basePortName: Top Exit
+    targetPortName: Top Exit
   - baseNodeguid: 40139ca8-1b28-4b1a-8988-474bda566c64
     targetNodeguid: b9e1205a-fccd-434c-bf2c-d1d0d71cee3a
-    portName: Choice 1
+    basePortName: Top Exit
+    targetPortName: Top Exit
+  exposedProperties: []

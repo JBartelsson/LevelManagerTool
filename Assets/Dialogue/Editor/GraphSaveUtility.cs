@@ -9,13 +9,13 @@ using UnityEngine.UIElements;
 
 public class GraphSaveUtility : MonoBehaviour
 {
-    private DialogueGraphView _targetGraphView;
+    private SceneTransitionsGraphView _targetGraphView;
     private SceneTransitions _containerCache;
 
     private List<Edge> Edges => _targetGraphView.edges.ToList();
-    private List<DialogueNode> Nodes => _targetGraphView.nodes.ToList().Cast<DialogueNode>().ToList();
+    private List<SceneTransitionNode> Nodes => _targetGraphView.nodes.ToList().Cast<SceneTransitionNode>().ToList();
 
-    public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
+    public static GraphSaveUtility GetInstance(SceneTransitionsGraphView targetGraphView)
     {
         return new GraphSaveUtility
         {
@@ -31,6 +31,7 @@ public class GraphSaveUtility : MonoBehaviour
 
         SceneTransitions sceneTransition = AssetDatabase.LoadAssetAtPath<SceneTransitions>(fileName);
         sceneTransition.Renew(dialogueContainer.DialogueNodeData, dialogueContainer.NodeLinks, dialogueContainer.ExposedProperties);
+        EditorUtility.SetDirty(sceneTransition);
         AssetDatabase.SaveAssets();
     }
 
@@ -46,8 +47,8 @@ public class GraphSaveUtility : MonoBehaviour
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
         for (int i = 0; i < connectedPorts.Length; i++)
         {
-            var outputNode = connectedPorts[i].output.node as DialogueNode;
-            var inputNode = connectedPorts[i].input.node as DialogueNode;
+            var outputNode = connectedPorts[i].output.node as SceneTransitionNode;
+            var inputNode = connectedPorts[i].input.node as SceneTransitionNode;
 
             dialogueContainer.NodeLinks.Add(new NodeLinkData()
             {
@@ -59,7 +60,7 @@ public class GraphSaveUtility : MonoBehaviour
         }
         foreach (var dialogueNode in Nodes.Where(node => !node.EntryPoint))
         {
-            dialogueContainer.DialogueNodeData.Add(new DialogueNodeData
+            dialogueContainer.DialogueNodeData.Add(new SceneTransitionNodeData
             {
                 guid = dialogueNode.GUID,
                 scenePath = dialogueNode.sceneName,
@@ -131,7 +132,7 @@ public class GraphSaveUtility : MonoBehaviour
     {
         foreach (var nodeData in _containerCache.DialogueNodeData)
         {
-            var tempNode = _targetGraphView.CreateDialogueNode(nodeData.scenePath, Vector2.zero);
+            var tempNode = _targetGraphView.CreateTransitionNodeGraphic(nodeData.scenePath, Vector2.zero);
             tempNode.GUID = nodeData.guid;
             tempNode.SetPosition(new Rect(_containerCache.DialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
             _targetGraphView.AddElement(tempNode);
@@ -141,8 +142,6 @@ public class GraphSaveUtility : MonoBehaviour
 
     private void ClearGraph()
     {
-        if (_containerCache.NodeLinks.Count == 0) return;
-        //Nodes.Find(x => x.EntryPoint).GUID = _containerCache.NodeLinks[0].baseNodeguid;
 
         foreach(var node in Nodes)
         {

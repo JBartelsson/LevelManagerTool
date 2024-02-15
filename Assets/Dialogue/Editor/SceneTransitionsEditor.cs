@@ -4,7 +4,7 @@ using System.ComponentModel;
 using UnityEditor;
 using UnityEngine;
 [CustomEditor(typeof(SceneTransitions))]
-public class DialogueSOEditor : Editor
+public class SceneTransitionsEditor : Editor
 {
 
     public override void OnInspectorGUI()
@@ -13,7 +13,7 @@ public class DialogueSOEditor : Editor
         var dialogueContainer = (SceneTransitions)target;
         if (GUILayout.Button("Open Editor")){
             Debug.Log(target.name);
-            DialogueGraph.OpenDialogueGraphWindow(AssetDatabase.GetAssetPath(target));
+            SceneTransitionsWindow.OpenDialogueGraphWindow(AssetDatabase.GetAssetPath(target));
         }
     }
 

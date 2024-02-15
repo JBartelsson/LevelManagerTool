@@ -9,16 +9,22 @@ using System;
 using System.Linq;
 using System.IO;
 
-public class DialogueGraph : EditorWindow
+public class SceneTransitionsWindow : EditorWindow
 {
-    private DialogueGraphView _graphView;
-    private static string _filename = "New Narrative";
+    private SceneTransitionsGraphView _graphView;
+    private string _filename = "New Narrative";
     [MenuItem("Tools/Level Graph")]
     public static void OpenDialogueGraphWindow(string filename)
     {
-        _filename = filename;
-        var window = GetWindow<DialogueGraph>();
-        window.titleContent = new GUIContent(Path.GetFileName(filename));
+        SceneTransitionsWindow sceneTransitionsWindow = GetWindow<SceneTransitionsWindow>();
+        if (filename != sceneTransitionsWindow._filename)
+        {
+            sceneTransitionsWindow.RequestDataOperation(true);
+        }
+        sceneTransitionsWindow._filename = filename;
+        sceneTransitionsWindow.RequestDataOperation(false);
+        sceneTransitionsWindow.titleContent = new GUIContent(Path.GetFileName(filename));
+        
     }
 
     private void OnEnable()
@@ -27,7 +33,6 @@ public class DialogueGraph : EditorWindow
         GenerateToolbar();
         GenerateMinimap();
         GenerateBlackboard();
-        RequestDataOperation(false);
     }
 
     private void GenerateBlackboard()
@@ -58,6 +63,8 @@ public class DialogueGraph : EditorWindow
         rootVisualElement.Remove(_graphView);
     }
 
+   
+
     private void OnDestroy()
     {
         if(EditorUtility.DisplayDialog("Save?", "Want to save the asset?", "yes", "no")){
@@ -70,7 +77,7 @@ public class DialogueGraph : EditorWindow
 
     private void ConstructGraphView()
     {
-        _graphView = new DialogueGraphView(this) { name = "Dialogue Graph" };
+        _graphView = new SceneTransitionsGraphView(this) { name = "Dialogue Graph" };
         _graphView.StretchToParentSize();
         rootVisualElement.Add(_graphView);
     }

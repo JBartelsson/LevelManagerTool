@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 [Serializable]
 
-public class DialogueNodeData
+public class SceneTransitionNodeData
 {
     public string guid;
     public string scenePath;

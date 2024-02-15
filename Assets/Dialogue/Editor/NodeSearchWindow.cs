@@ -7,13 +7,13 @@ using UnityEngine.UIElements;
 
 public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
 {
-    private DialogueGraphView _graphView;
+    private SceneTransitionsGraphView _graphView;
     private EditorWindow editorWindow;
     private Texture2D _indentationIcon;
 
     
 
-    public void Init(EditorWindow editorWindow, DialogueGraphView graphView)
+    public void Init(EditorWindow editorWindow, SceneTransitionsGraphView graphView)
     {
         this._graphView = graphView;
         this.editorWindow = editorWindow;
@@ -29,7 +29,11 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
             new SearchTreeGroupEntry(new GUIContent("Dialogue Node"), 1),
             new SearchTreeEntry(new GUIContent("Dialogue Node", _indentationIcon))
             {
-                userData = new DialogueNode(), level = 2
+                userData = new SceneTransitionNode(), level = 2
+            },
+            new SearchTreeEntry(new GUIContent("Condition", _indentationIcon))
+            {
+                userData = new SceneConditionNode(), level = 2
             },
             new SearchTreeEntry(new GUIContent("Trigger", _indentationIcon))
             {
@@ -46,8 +50,11 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         var localMousePosition = _graphView.contentContainer.WorldToLocal(worldMousePos);
         switch (SearchTreeEntry.userData)
         {
-            case DialogueNode:
-                _graphView.CreateNode("", localMousePosition);
+            case SceneTransitionNode:
+                _graphView.CreateTransitionNode("", localMousePosition);
+                return true;
+            case SceneConditionNode:
+                _graphView.CreateConditionNode();
                 return true;
             default:
                 return false;

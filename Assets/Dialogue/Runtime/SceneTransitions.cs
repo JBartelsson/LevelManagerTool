@@ -12,14 +12,17 @@ public class SceneTransitions : ScriptableObject
     public static string TOP_PORT_NAME = "Top Exit";
     public static string BOTTOM_PORT_NAME = "Bottom Exit";
 
-    private List<DialogueNodeData> dialogueNodeData = new();
-    private List<NodeLinkData> nodeLinks = new();
-    private List<ExposedProperty> exposedProperties = new();
+    [HideInNormalInspector]
+    [SerializeField] private List<SceneTransitionNodeData> dialogueNodeData = new();
+    [HideInNormalInspector]
+    [SerializeField] private List<NodeLinkData> nodeLinks = new();
+    [HideInNormalInspector]
+    [SerializeField] private List<ExposedProperty> exposedProperties = new();
 
-    public List<DialogueNodeData> DialogueNodeData { get => dialogueNodeData; set => dialogueNodeData = value; }
+    public List<SceneTransitionNodeData> DialogueNodeData { get => dialogueNodeData; set => dialogueNodeData = value; }
     public List<NodeLinkData> NodeLinks { get => nodeLinks; set => nodeLinks = value; }
     public List<ExposedProperty> ExposedProperties { get => exposedProperties; set => exposedProperties = value; }
-    public void Renew(List<DialogueNodeData> dialogueNodeData, List<NodeLinkData> nodeLinkData, List<ExposedProperty> exposedProperties)
+    public void Renew(List<SceneTransitionNodeData> dialogueNodeData, List<NodeLinkData> nodeLinkData, List<ExposedProperty> exposedProperties)
     {
         this.dialogueNodeData = dialogueNodeData;
         this.nodeLinks = nodeLinkData;
@@ -36,8 +39,8 @@ public class SceneTransitions : ScriptableObject
     public bool ReceiveScenePath(string currentScenePath, ExitDirection exitDirection, out string newScenePath)
     {
 
-        DialogueNodeData currentNodeData = DialogueNodeData.First((x) => x.scenePath == currentScenePath);
-        DialogueNodeData nextDialogueNodeData;
+        SceneTransitionNodeData currentNodeData = DialogueNodeData.First((x) => x.scenePath == currentScenePath);
+        SceneTransitionNodeData nextDialogueNodeData;
         NodeLinkData nodeLink;
         newScenePath = "";
         switch (exitDirection)

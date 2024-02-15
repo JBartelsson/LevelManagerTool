@@ -12,3 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36c812dd4361efc40bced7779321f7d7, type: 3}
   m_Name: New Narrative
   m_EditorClassIdentifier: 
+  dialogueNodeData:
+  - guid: 8846e798-5a78-4f5e-a09b-183eed1f1729
+    scenePath: Assets/Scenes/Scene1.unity
+    position: {x: 520, y: 378.40002}
+  - guid: 01bb36d2-74c3-411c-8a69-4140e88e156e
+    scenePath: Assets/Scenes/Scene1.unity
+    position: {x: 509.6, y: 148}
+  - guid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
+    scenePath: Assets/Scenes/Scene1.unity
+    position: {x: 822.4, y: 148}
+  nodeLinks:
+  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
+    targetNodeguid: 8846e798-5a78-4f5e-a09b-183eed1f1729
+    basePortName: Bottom Exit
+    targetPortName: Top Exit
+  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
+    targetNodeguid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
+    basePortName: Right Exit
+    targetPortName: Left Exit
+  exposedProperties: []

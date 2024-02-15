@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor.Experimental.GraphView;
 
-public class DialogueNode : Node
+public class SceneConditionNode : Node
 {
     public string GUID;
 
-    public string sceneName;
-    public bool EntryPoint = false;
+    public ExposedProperty property;
+    public bool necessaryState;
 }
