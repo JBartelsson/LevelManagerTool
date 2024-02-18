@@ -12,23 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36c812dd4361efc40bced7779321f7d7, type: 3}
   m_Name: New Narrative
   m_EditorClassIdentifier: 
-  dialogueNodeData:
-  - guid: 8846e798-5a78-4f5e-a09b-183eed1f1729
+  sceneTransitionNodeData:
+  - guid: 9dff8352-4e58-40ef-a093-068a78655648
+    position: {x: 595.2, y: 260}
+    scenePath: Assets/Scenes/Scene2.unity
+  - guid: e18603b6-79bc-4654-8dd0-0d7e771f9b82
+    position: {x: 125.6, y: 364.80002}
     scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 520, y: 378.40002}
-  - guid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 509.6, y: 148}
-  - guid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
-    scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 822.4, y: 148}
+  sceneConditionNodeData:
+  - guid: 8f2fce1e-5b4d-4ea7-8bca-603c77608c35
+    position: {x: 353.6, y: 221.59999}
+    property:
+      PropertyName: tetete
+      PropertyValue: New Value
+    necessaryState: 0
   nodeLinks:
-  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    targetNodeguid: 8846e798-5a78-4f5e-a09b-183eed1f1729
-    basePortName: Bottom Exit
-    targetPortName: Top Exit
-  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    targetNodeguid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
+  - baseNodeguid: e18603b6-79bc-4654-8dd0-0d7e771f9b82
+    targetNodeguid: 8f2fce1e-5b4d-4ea7-8bca-603c77608c35
     basePortName: Right Exit
+    targetPortName: Scene Left
+  - baseNodeguid: 8f2fce1e-5b4d-4ea7-8bca-603c77608c35
+    targetNodeguid: 9dff8352-4e58-40ef-a093-068a78655648
+    basePortName: Scene Right
     targetPortName: Left Exit
-  exposedProperties: []
+  exposedProperties:
+  - PropertyName: test
+    PropertyValue: New Value
+  - PropertyName: teees
+    PropertyValue: New Value
+  - PropertyName: tetete
+    PropertyValue: New Value

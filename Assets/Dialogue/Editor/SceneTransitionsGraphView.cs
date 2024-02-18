@@ -2,15 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor.Experimental.GraphView;
-using UnityEngine.UIElements;
 using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Content;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class SceneTransitionsGraphView : GraphView
 {
-    public readonly Vector2 defaultNodesize = new Vector2(150, 100);
+    private const string TRIGGER_LEFT_PORT_NAME = "Scene Left";
+    private const string TRIGGER_RIGHT_PORT_NAME = "Scene Right";
+    private const string DROPDOWN_NAME = "Dropdown-Container";
+    private const string TOGGLE_NAME = "Toggle-Container";
+
+    public readonly Vector2 defaultTransitionNodeSize = new Vector2(150, 100);
+    public readonly Vector2 defaultConditionNodeSize = new Vector2(150, 70);
     private readonly Vector2 defaultPosition = new Vector2(0f, 0f);
     public Blackboard blackboard;
     private NodeSearchWindow nodeSearchWindow;
@@ -60,24 +67,6 @@ public class SceneTransitionsGraphView : GraphView
         return node.InstantiatePort(orientation, portDirection, capacity, typeof(float));
     }
 
-    private SceneTransitionNode GenerateEntryPointNode()
-    {
-        var node = new SceneTransitionNode
-        {
-            title = "START",
-            GUID = Guid.NewGuid().ToString(),
-            EntryPoint = true
-        };
-
-        var generatedPort = GeneratePort(node, Direction.Output);
-        generatedPort.portName = "Next";
-        node.outputContainer.Add(generatedPort);
-
-        node.RefreshExpandedState();
-        node.RefreshPorts();
-        node.SetPosition(new Rect(100, 200, 100, 150));
-        return node;
-    }
     //Creates the DialogueNode Visual
     public SceneTransitionNode CreateTransitionNodeGraphic(string scenePath, Vector2? position = null)
     {
@@ -97,55 +86,52 @@ public class SceneTransitionsGraphView : GraphView
             scenePath = scenes[0];
         } 
 
-        var dialogueNode = new SceneTransitionNode
+        var sceneTransitionNode = new SceneTransitionNode
         {
             title = scenePath,
             sceneName = scenePath,
             GUID = Guid.NewGuid().ToString()
         };
-        var leftPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Single, Orientation.Horizontal);
+        var leftPort = GeneratePort(sceneTransitionNode, Direction.Input, Port.Capacity.Single, Orientation.Horizontal);
         leftPort.portName = SceneTransitions.LEFT_PORT_NAME;
         leftPort.name = SceneTransitions.LEFT_PORT_NAME;
 
-        dialogueNode.inputContainer.Add(leftPort);
+        sceneTransitionNode.inputContainer.Add(leftPort);
 
-        var rightPort = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Single);
+        var rightPort = GeneratePort(sceneTransitionNode, Direction.Output, Port.Capacity.Single);
         rightPort.portName = SceneTransitions.RIGHT_PORT_NAME;
         rightPort.name = SceneTransitions.RIGHT_PORT_NAME;
-        dialogueNode.outputContainer.Add(rightPort);
+        sceneTransitionNode.outputContainer.Add(rightPort);
 
-        var bottomPort = GeneratePort(dialogueNode, Direction.Output, Port.Capacity.Single, Orientation.Vertical);
+        var bottomPort = GeneratePort(sceneTransitionNode, Direction.Output, Port.Capacity.Single, Orientation.Vertical);
         bottomPort.portName = SceneTransitions.BOTTOM_PORT_NAME;
         bottomPort.name = SceneTransitions.BOTTOM_PORT_NAME;
 
 
-        dialogueNode.extensionContainer.Add(bottomPort);
-        VisualElement topContainer = new VisualElement();
-        topContainer.style.backgroundColor = Color.green;
-        topContainer.Add(bottomPort);
+        sceneTransitionNode.extensionContainer.Add(bottomPort);
+        VisualElement bottomContainer = new VisualElement();
+        bottomContainer.style.backgroundColor = Color.green;
+        bottomContainer.Add(bottomPort);
 
-        var topPort = GeneratePort(dialogueNode, Direction.Input, Port.Capacity.Single, Orientation.Vertical);
+        var topPort = GeneratePort(sceneTransitionNode, Direction.Input, Port.Capacity.Single, Orientation.Vertical);
         topPort.portName = SceneTransitions.TOP_PORT_NAME;
         topPort.name = SceneTransitions.TOP_PORT_NAME;
 
-        topPort.style.borderBottomWidth = 5f;
-        topPort.style.borderBottomColor = Color.black;
-        topPort.style.color = Color.black;
+        
         topPort.style.justifyContent = Justify.Center;
         bottomPort.style.justifyContent = Justify.Center;
 
         topPort.style.alignItems = Align.Center;
         bottomPort.style.alignItems = Align.Center;
-        //dialogueNode.extensionContainer.Add(inputPort4);
-        VisualElement bottomContainer = new VisualElement();
-        bottomContainer.style.backgroundColor = Color.yellow;
-        bottomContainer.Add(topPort);
+        VisualElement topContainer = new VisualElement();
+        topContainer.style.backgroundColor = Color.yellow;
+        topContainer.Add(topPort);
 
         DropdownField dropDown = new DropdownField();
         dropDown.choices = scenes;
         dropDown.RegisterValueChangedCallback((evt) =>
         {
-            dialogueNode.sceneName = evt.newValue;
+            sceneTransitionNode.sceneName = evt.newValue;
         });
         if (scenes.Contains(scenePath))
         {
@@ -156,36 +142,74 @@ public class SceneTransitionsGraphView : GraphView
         }
         
 
-        dialogueNode.mainContainer.Add(topContainer);
-        dialogueNode.mainContainer.Insert(0, bottomContainer);
-        dialogueNode.titleContainer.Add(dropDown);
+        sceneTransitionNode.mainContainer.Add(bottomContainer);
+        sceneTransitionNode.mainContainer.Insert(0, topContainer);
+        sceneTransitionNode.titleContainer.Add(dropDown);
 
-        dialogueNode.outputContainer.style.backgroundColor = Color.red;
-        dialogueNode.RefreshExpandedState();
-        dialogueNode.RefreshPorts();
-        dialogueNode.SetPosition(new Rect(position.Value, defaultNodesize));
+        sceneTransitionNode.outputContainer.style.backgroundColor = Color.red;
+        sceneTransitionNode.RefreshExpandedState();
+        sceneTransitionNode.RefreshPorts();
+        sceneTransitionNode.SetPosition(new Rect(position.Value, defaultTransitionNodeSize));
 
-        dialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
-        return dialogueNode;
+        sceneTransitionNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
+        return sceneTransitionNode;
     }
 
-    private SceneConditionNode CreateConditionNodeGraphic()
+    public SceneConditionNode CreateConditionNodeGraphic(ExposedProperty exposedProperty, bool necessaryState, Vector2 position)
     {
         SceneConditionNode sceneConditionNode = new SceneConditionNode
         {
-            GUID = Guid.NewGuid().ToString()
+            GUID = Guid.NewGuid().ToString(),
+            title = "Condition"
         };
 
         var leftPort = GeneratePort(sceneConditionNode, Direction.Input, Port.Capacity.Single, Orientation.Horizontal);
-        leftPort.portName = SceneTransitions.LEFT_PORT_NAME;
-        leftPort.name = SceneTransitions.LEFT_PORT_NAME;
+        leftPort.portName = TRIGGER_LEFT_PORT_NAME;
+        leftPort.name = TRIGGER_LEFT_PORT_NAME;
+
+        var rightPort = GeneratePort(sceneConditionNode, Direction.Output, Port.Capacity.Single);
+        rightPort.portName = TRIGGER_RIGHT_PORT_NAME;
+        rightPort.name = TRIGGER_RIGHT_PORT_NAME;
+        //DropDown Field
+        DropdownField dropDown = new DropdownField();
+        List<string> dropDownChoices = new();
+        foreach (var item in exposedProperties)
+        {
+            dropDownChoices.Add(item.PropertyName);
+        }
+        dropDown.choices = dropDownChoices;
+        dropDown.RegisterValueChangedCallback((evt) =>
+        {
+            sceneConditionNode.property = exposedProperties.FirstOrDefault((x) => x.PropertyName == evt.newValue);
+        });
+        VisualElement dropDownContainer = new VisualElement();
+        Label conditionLabel = new Label();
+        conditionLabel.text = "Condition";
+        dropDownContainer.name = DROPDOWN_NAME;
+        dropDownContainer.Add(conditionLabel);
+        dropDownContainer.Add(dropDown);
+
+        VisualElement toggleContainer = new VisualElement();
+        toggleContainer.name = TOGGLE_NAME;
+        Label necessaryStateLabel = new Label();
+        necessaryStateLabel.text = "Necessary State:";
+        UnityEngine.UIElements.Toggle toggle = new UnityEngine.UIElements.Toggle();
+        toggle.RegisterValueChangedCallback((evt) =>
+        {
+            sceneConditionNode.necessaryState = evt.newValue;
+        });
+        toggleContainer.Add(necessaryStateLabel);
+        toggleContainer.Add(toggle);
 
         sceneConditionNode.inputContainer.Add(leftPort);
 
-        var rightPort = GeneratePort(sceneConditionNode, Direction.Output, Port.Capacity.Single);
-        rightPort.portName = SceneTransitions.RIGHT_PORT_NAME;
-        rightPort.name = SceneTransitions.RIGHT_PORT_NAME;
+        
+        sceneConditionNode.contentContainer.Add(dropDownContainer);
+        sceneConditionNode.contentContainer.Add(toggleContainer);
         sceneConditionNode.outputContainer.Add(rightPort);
+        sceneConditionNode.SetPosition(new Rect(position, defaultConditionNodeSize));
+        sceneConditionNode.styleSheets.Add(Resources.Load<StyleSheet>("ConditionNode"));
+
         return sceneConditionNode;
     }
 
@@ -206,14 +230,14 @@ public class SceneTransitionsGraphView : GraphView
         dialogueNode.RefreshExpandedState();
     }
 
-    public void CreateTransitionNode(string nodename, Vector2 position)
+    public void CreateTransitionNode(string scenePath, Vector2 position)
     {
-        AddElement(CreateTransitionNodeGraphic(nodename, position));
+        AddElement(CreateTransitionNodeGraphic(scenePath, position));
     }
 
-    public void CreateConditionNode()
+    public void CreateConditionNode(ExposedProperty exposedProperty, bool necessaryState, Vector2 position)
     {
-        AddElement(CreateConditionNodeGraphic());
+        AddElement(CreateConditionNodeGraphic(exposedProperty, necessaryState, position));
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

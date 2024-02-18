@@ -1,0 +1,13 @@
+#Dropdown-Container, #Toggle-Container {
+   flex-direction: row;
+   justify-content: space-between;
+   align-items: stretch;
+   align-content: stretch;
+   background-color: gray
+}
+#Dropdown-Container .unity-label {
+    max-width: 50px;
+}
+
+.node {
+}

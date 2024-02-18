@@ -11,12 +11,12 @@ using System.IO;
 
 public class SceneTransitionsWindow : EditorWindow
 {
-    private SceneTransitionsGraphView _graphView;
-    private string _filename = "New Narrative";
-    [MenuItem("Tools/Level Graph")]
+    private static SceneTransitionsGraphView _graphView;
+    private static SceneTransitionsWindow sceneTransitionsWindow;
+    private string _filename = "";
     public static void OpenDialogueGraphWindow(string filename)
     {
-        SceneTransitionsWindow sceneTransitionsWindow = GetWindow<SceneTransitionsWindow>();
+        sceneTransitionsWindow = GetWindow<SceneTransitionsWindow>();
         if (filename != sceneTransitionsWindow._filename)
         {
             sceneTransitionsWindow.RequestDataOperation(true);
@@ -33,7 +33,15 @@ public class SceneTransitionsWindow : EditorWindow
         GenerateToolbar();
         GenerateMinimap();
         GenerateBlackboard();
+        RequestDataOperation(false);
     }
+
+    private void OnProjectChange()
+    {
+
+    }
+
+
 
     private void GenerateBlackboard()
     {
@@ -95,7 +103,6 @@ public class SceneTransitionsWindow : EditorWindow
     {
         if (string.IsNullOrEmpty(_filename))
         {
-            EditorUtility.DisplayDialog("Invalid file name!", "Please enter a valid filename", "OK");
             return;
         }
 

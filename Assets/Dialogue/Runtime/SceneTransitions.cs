@@ -13,20 +13,25 @@ public class SceneTransitions : ScriptableObject
     public static string BOTTOM_PORT_NAME = "Bottom Exit";
 
     [HideInNormalInspector]
-    [SerializeField] private List<SceneTransitionNodeData> dialogueNodeData = new();
+    [SerializeField] private List<SceneTransitionNodeData> sceneTransitionNodeData = new();
+    [HideInNormalInspector]
+    [SerializeField] private List<SceneConditionNodeData> sceneConditionNodeData = new();
     [HideInNormalInspector]
     [SerializeField] private List<NodeLinkData> nodeLinks = new();
     [HideInNormalInspector]
     [SerializeField] private List<ExposedProperty> exposedProperties = new();
 
-    public List<SceneTransitionNodeData> DialogueNodeData { get => dialogueNodeData; set => dialogueNodeData = value; }
+    public List<SceneTransitionNodeData> SceneTransitionsNodeData { get => sceneTransitionNodeData; set => sceneTransitionNodeData = value; }
     public List<NodeLinkData> NodeLinks { get => nodeLinks; set => nodeLinks = value; }
     public List<ExposedProperty> ExposedProperties { get => exposedProperties; set => exposedProperties = value; }
-    public void Renew(List<SceneTransitionNodeData> dialogueNodeData, List<NodeLinkData> nodeLinkData, List<ExposedProperty> exposedProperties)
+    public List<SceneConditionNodeData> SceneConditionNodeData { get => sceneConditionNodeData; set => sceneConditionNodeData = value; }
+
+    public void Renew(List<SceneTransitionNodeData> newSceneTransitionNodeData, List<SceneConditionNodeData> newSceneConditionNodeData, List<NodeLinkData> newNodeLinkData, List<ExposedProperty> newExposedProperties)
     {
-        this.dialogueNodeData = dialogueNodeData;
-        this.nodeLinks = nodeLinkData;
-        this.exposedProperties = exposedProperties;
+        this.sceneTransitionNodeData = newSceneTransitionNodeData;
+        this.sceneConditionNodeData = newSceneConditionNodeData;
+        this.nodeLinks = newNodeLinkData;
+        this.exposedProperties = newExposedProperties;
     }
 
     public enum ExitDirection
@@ -39,7 +44,7 @@ public class SceneTransitions : ScriptableObject
     public bool ReceiveScenePath(string currentScenePath, ExitDirection exitDirection, out string newScenePath)
     {
 
-        SceneTransitionNodeData currentNodeData = DialogueNodeData.First((x) => x.scenePath == currentScenePath);
+        SceneTransitionNodeData currentNodeData = SceneTransitionsNodeData.First((x) => x.scenePath == currentScenePath);
         SceneTransitionNodeData nextDialogueNodeData;
         NodeLinkData nodeLink;
         newScenePath = "";
@@ -48,29 +53,29 @@ public class SceneTransitions : ScriptableObject
             case ExitDirection.Left:
                 nodeLink = nodeLinks.FirstOrDefault((x) => x.baseNodeguid == currentNodeData.guid && x.basePortName == LEFT_PORT_NAME);
                 if (nodeLink == null) return false;
-                nextDialogueNodeData = DialogueNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
+                nextDialogueNodeData = SceneTransitionsNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
                 newScenePath = nextDialogueNodeData.scenePath;
                 return true;
             case ExitDirection.Right:
                 nodeLink = nodeLinks.FirstOrDefault((x) => x.baseNodeguid == currentNodeData.guid && x.basePortName == RIGHT_PORT_NAME);
                 if (nodeLink == null) return false; 
                 Debug.Log(nodeLink);
-                nextDialogueNodeData = DialogueNodeData.FirstOrDefault((x) => x.guid == nodeLink.targetNodeguid);
-                Debug.Log(DialogueNodeData);
+                nextDialogueNodeData = SceneTransitionsNodeData.FirstOrDefault((x) => x.guid == nodeLink.targetNodeguid);
+                Debug.Log(SceneTransitionsNodeData);
                 newScenePath = nextDialogueNodeData.scenePath;
                 return true;
 
             case ExitDirection.Top:
                 nodeLink = nodeLinks.FirstOrDefault((x) => x.baseNodeguid == currentNodeData.guid && x.basePortName == TOP_PORT_NAME);
                 if (nodeLink == null) return false;
-                nextDialogueNodeData = DialogueNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
+                nextDialogueNodeData = SceneTransitionsNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
                 newScenePath = nextDialogueNodeData.scenePath;
                 return true;
 
             case ExitDirection.Bottom:
                 nodeLink = nodeLinks.FirstOrDefault((x) => x.baseNodeguid == currentNodeData.guid && x.basePortName == BOTTOM_PORT_NAME);
                 if (nodeLink == null) return false;
-                nextDialogueNodeData = DialogueNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
+                nextDialogueNodeData = SceneTransitionsNodeData.First((x) => x.guid == nodeLink.targetNodeguid);
                 newScenePath = nextDialogueNodeData.scenePath;
                 return true;
 

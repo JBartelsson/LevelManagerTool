@@ -13,8 +13,10 @@ public class GraphSaveUtility : MonoBehaviour
     private SceneTransitions _containerCache;
 
     private List<Edge> Edges => _targetGraphView.edges.ToList();
-    private List<SceneTransitionNode> Nodes => _targetGraphView.nodes.ToList().Cast<SceneTransitionNode>().ToList();
+    private List<SceneTransitionNode> sceneTransitionNodes = new();
+    private List<SceneConditionNode> sceneConditionNodes = new();
 
+    private List<BasicNode> Nodes => _targetGraphView.nodes.ToList().Cast<BasicNode>().ToList();
     public static GraphSaveUtility GetInstance(SceneTransitionsGraphView targetGraphView)
     {
         return new GraphSaveUtility
@@ -23,34 +25,54 @@ public class GraphSaveUtility : MonoBehaviour
         };
     }
 
+    private void GetNodes()
+    {
+        foreach (Node node in _targetGraphView.nodes)
+        {
+            if (node is SceneTransitionNode)
+            {
+                sceneTransitionNodes.Add((SceneTransitionNode) node);
+                continue;
+            }
+            if (node is SceneConditionNode)
+            {
+                Debug.Log("Scene Condition");
+                sceneConditionNodes.Add((SceneConditionNode)node);
+                continue;
+            }
+        }
+    }
+
     public void SaveGraph(string fileName)
     {
+        GetNodes();
         var dialogueContainer = ScriptableObject.CreateInstance<SceneTransitions>();
         if(!SaveNodes(dialogueContainer)) return;
+        Debug.Log("Saving Scriptable Object");
         SaveExposedProperties(dialogueContainer);
 
         SceneTransitions sceneTransition = AssetDatabase.LoadAssetAtPath<SceneTransitions>(fileName);
-        sceneTransition.Renew(dialogueContainer.DialogueNodeData, dialogueContainer.NodeLinks, dialogueContainer.ExposedProperties);
+        sceneTransition.Renew(dialogueContainer.SceneTransitionsNodeData, dialogueContainer.SceneConditionNodeData, dialogueContainer.NodeLinks, dialogueContainer.ExposedProperties);
         EditorUtility.SetDirty(sceneTransition);
         AssetDatabase.SaveAssets();
     }
 
-    private void SaveExposedProperties(SceneTransitions dialogueContainer)
+    private void SaveExposedProperties(SceneTransitions sceneTransitionsContainer)
     {
-        dialogueContainer.ExposedProperties.AddRange(_targetGraphView.ExposedProperties);
+        sceneTransitionsContainer.ExposedProperties.AddRange(_targetGraphView.ExposedProperties);
     }
 
-    private bool SaveNodes(SceneTransitions dialogueContainer)
+    private bool SaveNodes(SceneTransitions sceneTransitionsContainer)
     {
         if (!Edges.Any()) return false; //If there is no connection, return
 
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
         for (int i = 0; i < connectedPorts.Length; i++)
         {
-            var outputNode = connectedPorts[i].output.node as SceneTransitionNode;
-            var inputNode = connectedPorts[i].input.node as SceneTransitionNode;
+            var outputNode = connectedPorts[i].output.node as BasicNode;
+            var inputNode = connectedPorts[i].input.node as BasicNode;
 
-            dialogueContainer.NodeLinks.Add(new NodeLinkData()
+            sceneTransitionsContainer.NodeLinks.Add(new NodeLinkData()
             {
                 baseNodeguid = outputNode.GUID,
                 basePortName = connectedPorts[i].output.portName,
@@ -58,13 +80,23 @@ public class GraphSaveUtility : MonoBehaviour
                 targetNodeguid = inputNode.GUID
             });
         }
-        foreach (var dialogueNode in Nodes.Where(node => !node.EntryPoint))
+        foreach (var sceneTransitionsNode in sceneTransitionNodes)
         {
-            dialogueContainer.DialogueNodeData.Add(new SceneTransitionNodeData
+            sceneTransitionsContainer.SceneTransitionsNodeData.Add(new SceneTransitionNodeData
             {
-                guid = dialogueNode.GUID,
-                scenePath = dialogueNode.sceneName,
-                position = dialogueNode.GetPosition().position
+                guid = sceneTransitionsNode.GUID,
+                scenePath = sceneTransitionsNode.sceneName,
+                position = sceneTransitionsNode.GetPosition().position
+            });
+        }
+        foreach (var sceneConditionNode in sceneConditionNodes)
+        {
+            sceneTransitionsContainer.SceneConditionNodeData.Add(new SceneConditionNodeData
+            {
+                guid = sceneConditionNode.GUID,
+                property = sceneConditionNode.property,
+                necessaryState = sceneConditionNode.necessaryState,
+                position = sceneConditionNode.GetPosition().position
             });
         }
         return true;
@@ -77,7 +109,7 @@ public class GraphSaveUtility : MonoBehaviour
         _containerCache = AssetDatabase.LoadAssetAtPath<SceneTransitions>(fileName);
         if(_containerCache == null)
         {
-            EditorUtility.DisplayDialog("File not Found", "Target dialogue graph file does not exist!", "OK");
+            EditorUtility.DisplayDialog("File not Found", "Target Scene Transitions file does not exist!", "OK");
             return;
         }
 
@@ -106,10 +138,8 @@ public class GraphSaveUtility : MonoBehaviour
                 var targetNodeGuid = connections[j].targetNodeguid;
                 var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
                 Port basePort = Nodes[i].Q<Port>(connections[j].basePortName);
-                Debug.Log($"{connections[j].basePortName} finds {basePort}");
 
                 Port targetPort = targetNode.Q<Port>(connections[j].targetPortName);
-                Debug.Log($"{connections[j].targetPortName} finds {targetPort}");
                 LinkNodes(targetPort, basePort);
             }
         }
@@ -130,11 +160,20 @@ public class GraphSaveUtility : MonoBehaviour
 
     private void CreateNodes()
     {
-        foreach (var nodeData in _containerCache.DialogueNodeData)
+        foreach (var sceneTransitionNodeData in _containerCache.SceneTransitionsNodeData)
         {
-            var tempNode = _targetGraphView.CreateTransitionNodeGraphic(nodeData.scenePath, Vector2.zero);
-            tempNode.GUID = nodeData.guid;
-            tempNode.SetPosition(new Rect(_containerCache.DialogueNodeData.First(x => x.guid == tempNode.GUID).position, _targetGraphView.defaultNodesize));
+            var tempNode = _targetGraphView.CreateTransitionNodeGraphic(sceneTransitionNodeData.scenePath, Vector2.zero);
+            tempNode.GUID = sceneTransitionNodeData.guid;
+            tempNode.SetPosition(new Rect(sceneTransitionNodeData.position, _targetGraphView.defaultTransitionNodeSize));
+            _targetGraphView.AddElement(tempNode);
+
+        }
+
+        foreach (var sceneConditionNodeData in _containerCache.SceneConditionNodeData)
+        {
+            var tempNode = _targetGraphView.CreateConditionNodeGraphic(sceneConditionNodeData.property, sceneConditionNodeData.necessaryState, Vector2.zero);
+            tempNode.GUID = sceneConditionNodeData.guid;
+            tempNode.SetPosition(new Rect(sceneConditionNodeData.position, _targetGraphView.defaultTransitionNodeSize));
             _targetGraphView.AddElement(tempNode);
 
         }
@@ -145,7 +184,6 @@ public class GraphSaveUtility : MonoBehaviour
 
         foreach(var node in Nodes)
         {
-            if (node.EntryPoint) continue;
             //Remove edges connected to the node
             Edges.Where(x => x.input.node == node).ToList().ForEach(edge => _targetGraphView.RemoveElement(edge));
 

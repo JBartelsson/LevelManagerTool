@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 
-public class SceneTransitionNode : BasicNode
+public class BasicNode : Node
 {
-    public string sceneName;
+    public string GUID;
 }

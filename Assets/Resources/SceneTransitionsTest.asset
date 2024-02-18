@@ -12,23 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36c812dd4361efc40bced7779321f7d7, type: 3}
   m_Name: SceneTransitionsTest
   m_EditorClassIdentifier: 
-  dialogueNodeData:
-  - guid: 8846e798-5a78-4f5e-a09b-183eed1f1729
+  sceneTransitionNodeData:
+  - guid: 659d3da1-7504-4e20-8ea4-4d2a17437a75
+    position: {x: 419.2, y: 242.40001}
     scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 520, y: 378.40002}
-  - guid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
-    scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 822.4, y: 148}
-  - guid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    scenePath: Assets/Scenes/Scene1.unity
-    position: {x: 350.4, y: 123.2}
+  sceneConditionNodeData: []
   nodeLinks:
-  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    targetNodeguid: 8846e798-5a78-4f5e-a09b-183eed1f1729
-    basePortName: Bottom Exit
-    targetPortName: Top Exit
-  - baseNodeguid: 01bb36d2-74c3-411c-8a69-4140e88e156e
-    targetNodeguid: 495a2ce7-7f96-421b-aa9e-b92c3548ade0
+  - baseNodeguid: 659d3da1-7504-4e20-8ea4-4d2a17437a75
+    targetNodeguid: def9fb08-009a-4da5-a90e-b7f3f7b5b493
     basePortName: Right Exit
-    targetPortName: Left Exit
+    targetPortName: Trigger Left
+  - baseNodeguid: def9fb08-009a-4da5-a90e-b7f3f7b5b493
+    targetNodeguid: 527df200-8dc5-4c81-8c28-1322849cce6e
+    basePortName: Trigger Right
+    targetPortName: Trigger Left
   exposedProperties: []

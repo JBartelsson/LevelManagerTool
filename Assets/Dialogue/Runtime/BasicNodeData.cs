@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 [Serializable]
 
-public class SceneTransitionNodeData : BasicNodeData
+public class BasicNodeData
 {
-    public string scenePath;
+    public string guid;
+    public Vector2 position;
 }

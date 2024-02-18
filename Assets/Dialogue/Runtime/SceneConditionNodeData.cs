@@ -1,9 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor.Experimental.GraphView;
+[Serializable]
 
-public class SceneConditionNode : BasicNode
+public class SceneConditionNodeData : BasicNodeData
 {
     public ExposedProperty property;
     public bool necessaryState;

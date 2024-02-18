@@ -54,7 +54,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
                 _graphView.CreateTransitionNode("", localMousePosition);
                 return true;
             case SceneConditionNode:
-                _graphView.CreateConditionNode();
+                _graphView.CreateConditionNode(null, false, localMousePosition);
                 return true;
             default:
                 return false;
